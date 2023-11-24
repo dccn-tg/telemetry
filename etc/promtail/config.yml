@@ -1,0 +1,23 @@
+server:
+  http_listen_port: 0
+  grpc_listen_port: 0
+
+positions:
+  filename: /var/log/positions.yaml
+
+client:
+  url: ${PROMTAIL_CLIENT_URL:-https://loki/api/v1/push}
+  basic_auth:
+    username: ${PROMTAIL_CLIENT_BASIC_AUTH_USERNAME}
+    password: ${PROMTAIL_CLIENT_BASIC_AUTH_PASSWORD} 
+
+scrape_configs:
+- job_name: telemetry
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+      job: telemetry
+      host: telemetry.dccn.nl
+      agent: promtail
+      __path__: /var/log/access.telemetry*.log

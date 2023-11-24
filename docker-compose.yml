@@ -1,0 +1,35 @@
+version: "3.3"
+
+services:
+  telemetry:
+    image: ${DOCKER_REGISTRY:-dccn}/telemetry-nginx:${DOCKER_IMAGE_TAG:-latest}
+    build:
+      context: .
+      args:
+        NGINX_IMAGE_TAG: ${DOCKER_IMAGE_TAG:-latest}
+    ports:
+      - ${NGINX_EXTERNAL_PORT:-8080}:80
+    volumes:
+      - type: bind
+        source: ${NGINX_TELEMETRY_CONFIG_FILE:-/mnt/docker/scripts/microservices/logger/etc/nginx/telemetry.conf}
+        target: /etc/nginx/telemetry.conf
+        read_only: true
+      - type: bind
+        source: ${NGINX_LOG_VOL:-/mnt/docker/data/logger}
+        target: /var/log_persistent
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
+  promtail:
+    image: grafana/promtail:main
+    restart: always
+    environment:
+      - PROMTAIL_CLIENT_URL
+      - PROMTAIL_CLIENT_BASIC_AUTH_USERNAME
+      - PROMTAIL_CLIENT_BASIC_AUTH_PASSWORD
+    volumes:
+      - ${PROMTAIL_CONFIG_DIR:-/mnt/docker/scripts/microservices/logger/etc/promtail}:/etc/promtail
+      - ${NGINX_LOG_VOL:-/mnt/docker/data/logger}:/var/log
+    command: -config.expand-env=true -config.file=/etc/promtail/config.yml
