@@ -1,8 +1,9 @@
 version: "3.3"
 
 services:
-  telemetry:
+  nginx:
     image: ${DOCKER_REGISTRY:-dccn}/telemetry-nginx:${DOCKER_IMAGE_TAG:-latest}
+    restart: always
     build:
       context: .
       args:
@@ -10,6 +11,10 @@ services:
     ports:
       - ${NGINX_EXTERNAL_PORT:-8080}:80
     volumes:
+      - type: bind
+        source: ${NGINX_CONFIG_FILE:-/mnt/docker/scripts/microservices/logger/etc/nginx/nginx.conf}
+        target: /etc/nginx/nginx.conf
+        read_only: true
       - type: bind
         source: ${NGINX_TELEMETRY_CONFIG_FILE:-/mnt/docker/scripts/microservices/logger/etc/nginx/telemetry.conf}
         target: /etc/nginx/telemetry.conf
